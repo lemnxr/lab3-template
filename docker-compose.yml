@@ -1,20 +1,122 @@
-version: "3"
+version: "3.1"
+
 services:
-  postgres:
-    image: library/postgres:13
-    container_name: postgres
-    restart: on-failure
+  loyalty_database:
+    image: postgres:16-alpine
     environment:
+      POSTGRES_DB: loyalty_db
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: "postgres"
-      POSTGRES_DB: postgres
-    volumes:
-      - db-data:/var/lib/postgresql/data
-      - ./postgres/:/docker-entrypoint-initdb.d/
+      POSTGRES_PASSWORD: password
     ports:
       - "5432:5432"
+    volumes:
+      - ./loyalty_data:/var/lib/postgresql/data
+      - ./loyalty_service/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-# TODO добавить сервисы
+  loyalty_service:
+    image: loyalty_service
+    container_name: loyalty_service
+    build:
+      context: "."
+      dockerfile:  ./docker/loyalty.Dockerfile
+    ports:
+      - "8050:8050"
+    networks:
+      - default
+    depends_on:
+      loyalty_database:
+        condition: service_healthy
+
+  payment_database:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: payment_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./payment_data:/var/lib/postgresql/data
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  payment_service:
+    image: payment_service
+    container_name: payment_service
+    build:
+      context: "."
+      dockerfile:  ./docker/payment.Dockerfile
+    ports:
+      - "8060:8060"
+    networks:
+      - default
+    depends_on:
+      payment_database:
+        condition: service_healthy
+
+  reservation_database:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: reservation_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5434:5432"
+    volumes:
+      - ./reservation_data:/var/lib/postgresql/data
+      - ./reservation_service/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  reservation_service:
+    image: reservation_service
+    container_name: reservation_service
+    build:
+      context: "."
+      dockerfile:  ./docker/reservation.Dockerfile
+    ports:
+      - "8070:8070"
+    networks:
+      - default
+    depends_on:
+      reservation_database:
+        condition: service_healthy
+
+  gateway_service:
+    image: gateway_service
+    container_name: gateway_service
+    build:
+      context: "."
+      dockerfile:  ./docker/gateway.Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - default
 
 volumes:
-  db-data:
+  loyalty_data:
+    driver: local
+  payment_data:
+    driver: local
+  reservation_data:
+    driver: local
+
+networks:
+  default:
