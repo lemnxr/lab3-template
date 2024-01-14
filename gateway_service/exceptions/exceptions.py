@@ -25,6 +25,18 @@ class ConflictException(HTTPException):
             headers=headers
         )
 
+class ServiceUnavailableException(HTTPException):
+    def __init__(
+        self,
+        message: str,
+        headers: dict[str, str] | None = None
+    ) -> None:
+        super().__init__(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, 
+            detail=message, 
+            headers=headers
+        )
+
 class InvalidRequestException(HTTPException):
     def __init__(
             self,

@@ -5,5 +5,5 @@ from schemas.loyalty import LoyaltyInfoResponse
 
 class UserInfoResponse(BaseModel):
     reservations: list[ReservationResponse]
-    loyalty: LoyaltyInfoResponse
+    loyalty: LoyaltyInfoResponse | dict[None, None]
     

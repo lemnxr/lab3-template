@@ -3,23 +3,36 @@ import json
 from uuid import UUID
 from requests import Response
 from enums.status import PaymentStatus
+from fastapi import status
 
 from cruds.interfaces.payment import IPaymentCRUD
 from cruds.base import BaseCRUD
 
+from utils.settings import get_settings
+from utils.curcuitBreaker import CircuitBreaker
+
 
 class PaymentCRUD(IPaymentCRUD, BaseCRUD):
     def __init__(self):
-        self.http_path = f'http://payment_service:8060/api/v1/'
+        settings = get_settings()
+        payment_host = settings["services"]["gateway"]["payment_host"]
+        payment_port = settings["services"]["payment"]["port"]
+        self.http_path = f'http://{payment_host}:{payment_port}/api/v1/'
 
     async def get_all_payments(
             self,
             page: int = 1,
             size: int = 100,
         ):
-        response: Response = requests.get(
-            url=f'{self.http_path}payments/?page={page}&size={size}'
+        response: Response = CircuitBreaker.send_request(
+            url=f'{self.http_path}payments/?page={page}&size={size}',
+            http_method=requests.get
         )
+        self._check_status_code(
+            status_code=response.status_code,
+            service_name="Payment Service"
+        )
+
         return response.json()
     
     async def get_payment_by_uid(
@@ -29,9 +42,15 @@ class PaymentCRUD(IPaymentCRUD, BaseCRUD):
         #response_list: Response = requests.get(url=f'{self.http_path}payments/')
         #print("payments_list:",response_list.json())
         #print("get_payment_uid:", payment_uid)
-        response: Response = requests.get(
-            url=f'{self.http_path}payments/{payment_uid}'
+        response: Response = CircuitBreaker.send_request(
+            url=f'{self.http_path}payments/{payment_uid}',
+            http_method=requests.get
         )
+        self._check_status_code(
+            status_code=response.status_code,
+            service_name="Payment Service"
+        )
+
         return response.json()
         
     async def get_new_payment(
@@ -41,7 +60,17 @@ class PaymentCRUD(IPaymentCRUD, BaseCRUD):
     ):
         payment_data = {"payment_uid": payment_uid, "status": PaymentStatus.Paid.value, "price": full_price}
         payment_data_json = json.dumps(payment_data)
-        requests.post(url=f'{self.http_path}payments/', data=payment_data_json)
+
+        try:
+            response: Response = requests.post(url=f'{self.http_path}payments/', data=payment_data_json)
+        except:
+            response = Response()
+            response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+            
+        self._check_status_code(
+            status_code=response.status_code,
+            service_name="Payment Service"
+        )
 
         return payment_data
     
@@ -52,5 +81,15 @@ class PaymentCRUD(IPaymentCRUD, BaseCRUD):
         cancel_data = {"status": f"{PaymentStatus.Canceled.value}"}
         cancel_data_json = json.dumps(cancel_data)
 
-        requests.patch(url=f'{self.http_path}payments/{payment_uid}', data=cancel_data_json)
+        try:
+            response: Response = requests.patch(url=f'{self.http_path}payments/{payment_uid}', data=cancel_data_json)
+        except:
+            response = Response()
+            response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+
+        self._check_status_code(
+            status_code=response.status_code,
+            service_name="Payment Service"
+        )
+        
         

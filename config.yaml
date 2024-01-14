@@ -1,0 +1,46 @@
+databases:
+  loyalty_db:
+    user: postgres
+    password: password
+    db: loyalty_db
+    host: loyalty_database
+    port: 5432
+  payment_db:
+    user: postgres
+    password: password
+    db: payment_db
+    host: payment_database
+    port: 5432
+  reservation_db:
+    user: postgres
+    password: password
+    db: reservation_db
+    host: reservation_database
+    port: 5432
+
+services:
+  loyalty:
+    host: "0.0.0.0"
+    port: 8050
+    log_level: "info"
+    reload: True
+  payment:
+    host: "0.0.0.0"
+    port: 8060
+    log_level: "info"
+    reload: True
+  reservation:
+    host: "0.0.0.0"
+    port: 8070
+    log_level: "info"
+    reload: True
+  gateway:
+    host: "0.0.0.0"
+    port: 8080
+    log_level: "info"
+    reload: True
+    loyalty_host:  loyalty_service
+    payment_host: payment_service
+    reservation_host: reservation_service
+    max_num_of_fails: 2
+    timeout: 10

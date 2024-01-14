@@ -1,15 +1,19 @@
+import requests
 from uuid import UUID
 from datetime import datetime
 
 from cruds.interfaces.reservation import IReservationCRUD
 from cruds.interfaces.payment import IPaymentCRUD
 from cruds.interfaces.loyalty import ILoyaltyCRUD
-from exceptions.exceptions import NotFoundException, ConflictException
+from exceptions.exceptions import NotFoundException, ConflictException, ServiceUnavailableException
 from enums.status import ReservationStatus, PaymentStatus, LoyaltyStatus
 from schemas.user import UserInfoResponse
 from schemas.reservation import *
 from schemas.payment import PaymentInfo
 from schemas.loyalty import LoyaltyInfoResponse, CreateLoyaltyRequest
+
+from utils.settings import get_settings
+from utils.requestQueue import RequestQueue
 
 
 class GatewayService():
@@ -21,6 +25,11 @@ class GatewayService():
         self._reservationCRUD = reservationCRUD()
         self._paymentCRUD = paymentCRUD()
         self._loyaltyCRUD = loyaltyCRUD()
+
+        settings = get_settings()
+        gateway_host = settings["services"]["gateway"]["host"]
+        gateway_port = settings["services"]["gateway"]["port"]
+        self.http_path = f'http://{gateway_host}:{gateway_port}/api/v1/'
 
     async def get_all_hotels(self, page: int, size: int):
         hotels_list = await self._reservationCRUD.get_all_hotels(page=page, size=size)
@@ -78,8 +87,13 @@ class GatewayService():
             #print("i:", i)
             #print(reservations_list[i]["payment_uid"])
             #print(reservations_list[i])
-            hotel_dict = await self.__get_hotel_by_id(reservations_list[i]["hotel_id"])
-            payment_dict = await self.__get_payment_by_uid(reservations_list[i]["payment_uid"])
+            try:
+                hotel_dict = await self.__get_hotel_by_id(reservations_list[i]["hotel_id"])
+                payment_dict = await self.__get_payment_by_uid(reservations_list[i]["payment_uid"])
+            except ServiceUnavailableException:
+                hotel_dict = f"hotel"
+                payment_dict = f"payment"
+
             #print(reservation_dict)
             #print(payment_dict)
             hotel_info = HotelInfo(
@@ -114,7 +128,10 @@ class GatewayService():
         return loyalty_dict
     
     async def _get_user_loyalty(self, user_name: str):
-        loyalty_dict = await self.__get_loyalty_by_username(user_name)
+        try:
+            loyalty_dict = await self.__get_loyalty_by_username(user_name)
+        except:
+            loyalty_dict = f"loyalty"
 
         if loyalty_dict == None:
             loyalty_dict = dict((await self._loyaltyCRUD.get_new_loyalty(
@@ -153,13 +170,16 @@ class GatewayService():
         if days < 1:
             raise ConflictException(prefix="Reserve Hotel")
         
-        new_reservation_uid = await self._reservationCRUD.get_new_reservation(
-            username = user_name,
-            hotel_id = hotel["id"],
-            status = PaymentStatus.Paid.value,
-            start_date = hotel_reservation_request.start_date,
-            end_date = hotel_reservation_request.end_date
-        )
+        try:
+            new_reservation_uid = await self._reservationCRUD.get_new_reservation(
+                username = user_name,
+                hotel_id = hotel["id"],
+                status = PaymentStatus.Paid.value,
+                start_date = hotel_reservation_request.start_date,
+                end_date = hotel_reservation_request.end_date
+            )
+        except ServiceUnavailableException:
+            new_reservation_uid = ""
 
         new_reservation = await self._reservationCRUD.get_reservation_by_uid(new_reservation_uid)
 
@@ -169,8 +189,12 @@ class GatewayService():
 
         full_price = full_price * ((100 - int(loyalty["discount"])) / 100)
 
-        new_payment = await self._paymentCRUD.get_new_payment(new_reservation["payment_uid"], full_price)
-        new_loyalty = await self._loyaltyCRUD.increase_loyalty(loyalty["username"], loyalty["reservation_count"])
+        try:
+            new_payment = await self._paymentCRUD.get_new_payment(new_reservation["payment_uid"], full_price)
+            new_loyalty = await self._loyaltyCRUD.increase_loyalty(loyalty["username"], loyalty["reservation_count"])
+        except:
+            new_payment = f"payment"
+            new_loyalty = f"loyalty"
 
         return CreateReservationResponse(
                         reservation_uid=new_reservation_uid, 
@@ -193,8 +217,12 @@ class GatewayService():
         if reservation["username"] != user_name:
             raise NotFoundException(prefix="Incorrect username")
     
-        hotel = await self.__get_hotel_by_id(reservation["hotel_id"])
-        payment = await self.__get_payment_by_uid(reservation["payment_uid"])
+        try:
+            hotel = await self.__get_hotel_by_id(reservation["hotel_id"])
+            payment = await self.__get_payment_by_uid(reservation["payment_uid"])
+        except ServiceUnavailableException:
+            hotel = f"hotel"
+            payment = f"payment"
 
         hotel_info = HotelInfo(
             hotel_uid=hotel["hotel_uid"],
@@ -230,13 +258,23 @@ class GatewayService():
         await self._reservationCRUD.reservation_cancel(reservation_uid)
         await self._paymentCRUD.payment_cancel(reservation["payment_uid"])
 
-        loyalty = await self._get_user_loyalty(user_name)
-        await self._loyaltyCRUD.decrease_loyalty(loyalty["username"], loyalty["reservation_count"])
+        try: 
+             loyalty = await self._get_user_loyalty(user_name)
+             await self._loyaltyCRUD.decrease_loyalty(loyalty["username"], loyalty["reservation_count"])
+        except ServiceUnavailableException:
+             RequestQueue.add_http_request(
+                 url=f'{self.http_path}reservations/{reservation_uid}',
+                 headers={"X-User-Name": user_name},
+                 http_method=requests.delete
+             )
 
         return reservation
     
     async def get_loyalty(self, user_name: str):
-        loyalty = await self._get_user_loyalty(user_name)
+        try:
+            loyalty = await self._get_user_loyalty(user_name)
+        except:
+            loyalty = {}
 
         loyalty_info = LoyaltyInfoResponse(
             status=loyalty["status"],
