@@ -148,8 +148,7 @@ class GatewayService():
     
     async def get_user_info(self, user_name: str):
         reservations = await self._get_user_reservations_hotels(user_name)
-        #print(reservations)
-        #print("t;asda;ljdklas djlasjdalshdskdlalkdsa")
+        
         loyalty = await self._get_user_loyalty(user_name)
 
         return UserInfoResponse(
