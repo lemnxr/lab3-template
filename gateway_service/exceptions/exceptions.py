@@ -39,13 +39,18 @@ class ServiceUnavailableException(HTTPException):
 
 class InvalidRequestException(HTTPException):
     def __init__(
-            self,
-            prefix:str,
-            headers: dict[str, str] | None = None
+        self,
+        prefix: str,
+        status_code: int,
+        message: str | None = None,
+        headers: dict[str, str] | None = None
     ) -> None:
+        if message == None:
+            message = f"Запрос вернул ошибку {status_code}"
+
         super().__init__(
             status_code=status.HTTP_502_BAD_GATEWAY, 
-            detail=f"{prefix}: Запрос вернул ошибку", 
+            detail=f"{prefix}: {message}", 
             headers=headers
-    )
+        )
         
