@@ -128,10 +128,10 @@ class GatewayService():
         return loyalty_dict
     
     async def _get_user_loyalty(self, user_name: str):
-        try:
-            loyalty_dict = await self.__get_loyalty_by_username(user_name)
-        except:
-            loyalty_dict = f"loyalty"
+        #try:
+        loyalty_dict = await self.__get_loyalty_by_username(user_name)
+        #except:
+        #    loyalty_dict = None
 
         if loyalty_dict == None:
             loyalty_dict = dict((await self._loyaltyCRUD.get_new_loyalty(
@@ -148,6 +148,8 @@ class GatewayService():
     
     async def get_user_info(self, user_name: str):
         reservations = await self._get_user_reservations_hotels(user_name)
+        #print(reservations)
+        #print("t;asda;ljdklas djlasjdalshdskdlalkdsa")
         loyalty = await self._get_user_loyalty(user_name)
 
         return UserInfoResponse(
@@ -174,7 +176,7 @@ class GatewayService():
             new_reservation_uid = await self._reservationCRUD.get_new_reservation(
                 username = user_name,
                 hotel_id = hotel["id"],
-                status = PaymentStatus.Paid.value,
+                res_status = PaymentStatus.Paid.value,
                 start_date = hotel_reservation_request.start_date,
                 end_date = hotel_reservation_request.end_date
             )

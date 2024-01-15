@@ -4,8 +4,40 @@
 	"values": [
 		{
 			"key": "baseUrl",
-			"value": "http://localhost:8080",
+			"value": "http://146.185.242.201:8080",
 			"enabled": true
+		},
+		{
+			"key": "hotel_uid",
+			"value": ""
+		},
+		{
+			"key": "username",
+			"value": ""
+		},
+		{
+			"key": "reservation_count",
+			"value": ""
+		},
+		{
+			"key": "discount",
+			"value": ""
+		},
+		{
+			"key": "hotelPrice",
+			"value": ""
+		},
+		{
+			"key": "reservation_uid",
+			"value": ""
+		},
+		{
+			"key": "start_date",
+			"value": ""
+		},
+		{
+			"key": "end_date",
+			"value": ""
 		}
 	],
 	"_postman_variable_scope": "environment",
