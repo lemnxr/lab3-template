@@ -144,7 +144,10 @@ class GatewayService():
     async def get_user_info(self, user_name: str):
         reservations = await self._get_user_reservations_hotels(user_name)
         
-        loyalty = await self._get_user_loyalty(user_name)
+        try:
+            loyalty = await self._get_user_loyalty(user_name)
+        except ServiceUnavailableException:
+            loyalty = {}
 
         return UserInfoResponse(
             reservations=reservations,
