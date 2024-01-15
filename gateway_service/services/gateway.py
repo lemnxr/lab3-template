@@ -270,15 +270,12 @@ class GatewayService():
         return reservation
     
     async def get_loyalty(self, user_name: str):
-        try:
-            loyalty = await self._get_user_loyalty(user_name)
-        except:
-            loyalty = {}
+        loyalty = await self._get_user_loyalty(user_name)
 
         loyalty_info = LoyaltyInfoResponse(
-            status=loyalty["status"] if (loyalty) and (loyalty != {}) else None,
-            discount=loyalty["discount"] if (loyalty) and (loyalty != {}) else None,
-            reservation_count=loyalty["reservation_count"] if (loyalty) and (loyalty != {}) else None
+            status=loyalty["status"] if loyalty else None,
+            discount=loyalty["discount"] if loyalty else None,
+            reservation_count=loyalty["reservation_count"] loyalty else None
         )
         return loyalty_info
     
