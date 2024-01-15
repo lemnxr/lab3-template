@@ -83,7 +83,6 @@ class GatewayService():
         reservations = []
 
         for i in range(len(reservations_list)):
-            #print("i:", i)
             #print(reservations_list[i]["payment_uid"])
             #print(reservations_list[i])
             try:
