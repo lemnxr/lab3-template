@@ -276,9 +276,9 @@ class GatewayService():
             loyalty = {}
 
         loyalty_info = LoyaltyInfoResponse(
-            status=loyalty["status"],
-            discount=loyalty["discount"],
-            reservation_count=loyalty["reservation_count"]
+            status=loyalty["status"] if (loyalty) and (loyalty != {}) else None,
+            discount=loyalty["discount"] if (loyalty) and (loyalty != {}) else None,
+            reservation_count=loyalty["reservation_count"] if (loyalty) and (loyalty != {}) else None
         )
         return loyalty_info
     
