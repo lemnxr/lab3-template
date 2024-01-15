@@ -90,7 +90,6 @@ class GatewayService():
                 hotel_dict = f"hotel"
                 payment_dict = f"payment"
 
-            #print(reservation_dict)
             #print(payment_dict)
             hotel_info = HotelInfo(
                 hotel_uid=hotel_dict["hotel_uid"],
