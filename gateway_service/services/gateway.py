@@ -79,7 +79,7 @@ class GatewayService():
     
     async def _get_user_reservations_hotels(self, user_name: str):
         reservations_list = await self._reservationCRUD.get_reservations_by_username(user_name=user_name)
-        #print("reservations_list:",reservations_list)
+        
         reservations = []
 
         for i in range(len(reservations_list)):
