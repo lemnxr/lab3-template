@@ -120,6 +120,7 @@ class GatewayService():
             loyalty_dict = await self._loyaltyCRUD.get_loyalty_by_username(user_name)
         else:
             loyalty_dict = None
+        print(loyalty_dict)
         return loyalty_dict
     
     async def _get_user_loyalty(self, user_name: str):
@@ -271,7 +272,7 @@ class GatewayService():
     
     async def get_loyalty(self, user_name: str):
         loyalty = await self._get_user_loyalty(user_name)
-        print("111111111111111111111111111111111111111111111111",loyalty)
+        #print("111111111111111111111111111111111111111111111111",loyalty)
 
         loyalty_info = LoyaltyInfoResponse(
             status=loyalty["status"] if loyalty else None,
