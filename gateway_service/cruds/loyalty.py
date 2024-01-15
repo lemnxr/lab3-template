@@ -53,10 +53,10 @@ class LoyaltyCRUD(ILoyaltyCRUD, BaseCRUD):
             service_name="Loyalty Service"
             )  
 
-        if response.status_code == 404:
-            return None
-        else:
-            return response.json()
+        #if response.status_code == 404:
+        #    return None
+        #else:
+        return response.json()
     
     async def get_new_loyalty(
             self,
