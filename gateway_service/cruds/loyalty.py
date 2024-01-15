@@ -56,6 +56,7 @@ class LoyaltyCRUD(ILoyaltyCRUD, BaseCRUD):
             status_code=response.status_code,
             service_name="Loyalty Service"
             )  
+        print("RESPONSE", response.json())
         return response.json()
     
     async def get_new_loyalty(
