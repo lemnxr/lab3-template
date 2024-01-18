@@ -44,18 +44,13 @@ class LoyaltyCRUD(ILoyaltyCRUD, BaseCRUD):
             url=f'{self.http_path}loyalties/username/{user_name}',
             http_method=requests.get
         )
-        # self._check_status_code(
-        #      status_code=response.status_code,
-        #      service_name="Loyalty Service"
-        #      ) 
+        if response.status_code == 404:
+            return None
+        
         self._check_status_code(
             status_code=response.status_code,
             service_name="Loyalty Service"
             )  
-        print(response.status_code)
-        #if response.status_code == 404:
-        #    return None
-        #else:
         return response.json()
     
     async def get_new_loyalty(

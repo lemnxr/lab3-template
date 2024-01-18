@@ -90,7 +90,6 @@ class GatewayService():
                 hotel_dict = f"hotel"
                 payment_dict = f"payment"
 
-            #print(payment_dict)
             hotel_info = HotelInfo(
                 hotel_uid=hotel_dict["hotel_uid"],
                 name=hotel_dict["name"],
@@ -119,15 +118,12 @@ class GatewayService():
         if user_name:
             loyalty_dict = await self._loyaltyCRUD.get_loyalty_by_username(user_name)
         else:
+
             loyalty_dict = None
-        print(loyalty_dict)
         return loyalty_dict
     
     async def _get_user_loyalty(self, user_name: str):
-        #try:
         loyalty_dict = await self.__get_loyalty_by_username(user_name)
-        #except:
-        #    loyalty_dict = None
 
         if loyalty_dict == None:
             loyalty_dict = dict((await self._loyaltyCRUD.get_new_loyalty(
@@ -272,7 +268,6 @@ class GatewayService():
     
     async def get_loyalty(self, user_name: str):
         loyalty = await self._get_user_loyalty(user_name)
-        #print("111111111111111111111111111111111111111111111111",loyalty)
 
         loyalty_info = LoyaltyInfoResponse(
             status=loyalty["status"] if loyalty else None,

@@ -39,9 +39,6 @@ class PaymentCRUD(IPaymentCRUD, BaseCRUD):
             self,
             payment_uid: UUID
     ):
-        #response_list: Response = requests.get(url=f'{self.http_path}payments/')
-        #print("payments_list:",response_list.json())
-        #print("get_payment_uid:", payment_uid)
         response: Response = CircuitBreaker.send_request(
             url=f'{self.http_path}payments/{payment_uid}',
             http_method=requests.get
