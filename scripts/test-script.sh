@@ -36,10 +36,9 @@ step() {
 
   printf "=== Step %d: %s %s ===\n" "$step" "$operation" "$service"
 
-  docker compose "$operation" "$service"
+  sudo docker-compose "$operation" "$service"
   if [[ "$operation" == "start" ]]; then
-    "$path"/wait-for.sh -t 120 "http://localhost:$port/api/v1/manage/health" -- echo "Host localhost:$port is active"
-    sleep 15
+    "$path"/wait-for.sh -t 120 "http://146.185.242.201:$port/manage/health" -- echo "Host 146.185.242.201:$port is active"
   fi
 
   newman run \
