@@ -35,40 +35,40 @@ jobs:
       #  run: pytest -vs services/reservation_service/app/unit_tests/tests.py
   
   deploy:
-    name: VM Deploy
+    name: Deploy service on VM
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       
-      - name: Send project files on VM
+      - name: Copy code to VM
         uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
-          passphrase: ${{ secrets.SSH_PASSWORD }}
           port: ${{ secrets.SSH_PORT }}
           source: "reservation_service,payment_service,loyalty_service,gateway_service,scripts,v2,docker,docker-compose.yml,requirements.txt,config.yaml,Makefile"
-          target: /home/${{ secrets.SSH_USERNAME }}/hotel_booking_system
-      
-      - name: Build and up hotel-booking-system
+          target: /home/${{ secrets.SSH_USERNAME }}/hotel-booking-system
+
+      - name: Run app on VM
         uses: appleboy/ssh-action@v1.0.0
+        env: 
+          WAIT_PORTS: 8080,8070,8060,8050
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
-          passphrase: ${{ secrets.SSH_PASSWORD }}
           port: ${{ secrets.SSH_PORT }}
           script: |
             cd /home/${{ secrets.SSH_USERNAME }}/hotel-booking-system
             echo ${{ secrets.SSH_PASSWORD }} | sudo -S docker-compose down
             echo ${{ secrets.SSH_PASSWORD }} | sudo -S docker rmi gateway_service
+            echo ${{ secrets.SSH_PASSWORD }} | sudo -S docker rmi reservation_service
             echo ${{ secrets.SSH_PASSWORD }} | sudo -S docker rmi payment_service
             echo ${{ secrets.SSH_PASSWORD }} | sudo -S docker rmi loyalty_service
-            echo ${{ secrets.SSH_PASSWORD }} | sudo -S docker rmi reservation_service
-            echo ${{ secrets.SSH_PASSWORD }} | sudo -S docker-compose build
+            echo ${{ secrets.SSH_PASSWORD }} | sudo -S docker rmi gateway_service
             echo ${{ secrets.SSH_PASSWORD }} | sudo -S docker-compose up -d
             echo ${{ secrets.SSH_PASSWORD }} | sudo ./scripts/wait-script.sh
   
