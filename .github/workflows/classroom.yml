@@ -46,23 +46,23 @@ jobs:
         uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.SSH_PASSWORD }}
           port: ${{ secrets.SSH_PORT }}
           source: "reservation_service,payment_service,loyalty_service,gateway_service,scripts,v2,docker,docker-compose.yml,requirements.txt,config.yaml,Makefile"
-          target: /home/${{ secrets.SSH_USER }}/hotel_booking_system
+          target: /home/${{ secrets.SSH_USERNAME }}/hotel_booking_system
       
       - name: Build and up hotel-booking-system
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.SSH_PASSWORD }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            cd /home/${{ secrets.SSH_USER }}/hotel-booking-system
+            cd /home/${{ secrets.SSH_USERNAME }}/hotel-booking-system
             echo ${{ secrets.SSH_PASSWORD }} | sudo -S docker-compose down
             echo ${{ secrets.SSH_PASSWORD }} | sudo -S docker rmi gateway_service
             echo ${{ secrets.SSH_PASSWORD }} | sudo -S docker rmi payment_service
@@ -84,8 +84,8 @@ jobs:
       - uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.SSH_PASSWORD }}
           port: ${{ secrets.SSH_PORT }}
           run: ./scripts/test-script.sh v2 loyalty_service 8050
